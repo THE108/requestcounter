@@ -23,6 +23,8 @@ _testmain.go
 *.test
 *.prof
 
+vendor/*
+
 # User-specific stuff:
 .idea
 requestcounter.iml

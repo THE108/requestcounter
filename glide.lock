@@ -1,0 +1,16 @@
+hash: bc00f8000972d967200a2422e9a6a0c15ce429cf5c889984f9914355bf460988
+updated: 2016-11-16T19:23:22.578613784+03:00
+imports:
+- name: github.com/edsrzf/mmap-go
+  version: 935e0e8a636ca4ba70b713f3e38a19e1b77739e8
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: 757bef944d0f21880861c2dd9c871ca543023cba
+- name: golang.org/x/net
+  version: 4971afdc2f162e82d185353533d3cf16188a9f4e
+  subpackages:
+  - context
+- name: gopkg.in/yaml.v2
+  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+devImports: []

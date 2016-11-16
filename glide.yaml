@@ -1,0 +1,8 @@
+package: github.com/THE108/requestcounter
+import:
+- package: github.com/edsrzf/mmap-go
+- package: github.com/gorilla/mux
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: gopkg.in/yaml.v2
