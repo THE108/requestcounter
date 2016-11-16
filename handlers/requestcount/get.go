@@ -1,8 +1,8 @@
 package requestcount
 
 import (
-	"github.com/THE108/requestcounter/common"
 	"github.com/THE108/requestcounter/models/requestcount"
+	"github.com/THE108/requestcounter/utils/params"
 
 	"golang.org/x/net/context"
 )
@@ -21,6 +21,6 @@ func NewGetRecipeHandler(model IRequestCountGetter) *GetRequestCountHandler {
 	}
 }
 
-func (handler *GetRequestCountHandler) Process(ctx context.Context, _ common.Params) (interface{}, error) {
+func (handler *GetRequestCountHandler) Process(ctx context.Context, _ params.Params) (interface{}, error) {
 	return handler.model.Get(ctx), nil
 }

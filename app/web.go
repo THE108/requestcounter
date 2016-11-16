@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/THE108/requestcounter/common"
-	"github.com/THE108/requestcounter/errors"
-	"github.com/THE108/requestcounter/log"
-	"github.com/THE108/requestcounter/tracedata"
+	"github.com/THE108/requestcounter/utils/errors"
+	"github.com/THE108/requestcounter/utils/log"
+	"github.com/THE108/requestcounter/utils/params"
+	"github.com/THE108/requestcounter/utils/tracedata"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
@@ -50,13 +50,13 @@ type HandlerInfo struct {
 // IGetHandler defines handlers that process GET-like requests
 // (return some data based on incoming parameters)
 type IGetHandler interface {
-	Process(ctx context.Context, params common.Params) (interface{}, error)
+	Process(ctx context.Context, params params.Params) (interface{}, error)
 }
 
 // IPostHandler defines handlers that process POST-like requests
 // (process incoming data using additional parameters)
 type IPostHandler interface {
-	Process(ctx context.Context, data interface{}, params common.Params) (interface{}, error)
+	Process(ctx context.Context, data interface{}, params params.Params) (interface{}, error)
 	GetBuffer() interface{}
 }
 
@@ -98,7 +98,7 @@ func (this *Application) addHandler(info *HandlerInfo) {
 func (this *Application) createGetRequestHandler(handlerName string, h IGetHandler) http.Handler {
 	httpHandler := func(rw http.ResponseWriter, req *http.Request) {
 		ctx := this.createContext(handlerName, req)
-		params := common.NewParams(req)
+		params := params.NewParams(req)
 
 		output, err := h.Process(ctx, params)
 		if err != nil {
@@ -122,7 +122,7 @@ func (this *Application) createGetRequestHandler(handlerName string, h IGetHandl
 func (this *Application) createPostRequestHandler(handlerName string, h IPostHandler) http.Handler {
 	httpHandler := func(rw http.ResponseWriter, req *http.Request) {
 		ctx := this.createContext(handlerName, req)
-		params := common.NewParams(req)
+		params := params.NewParams(req)
 
 		var input interface{}
 		if input = h.GetBuffer(); input != nil {
@@ -162,12 +162,10 @@ func (this *Application) makeTraceDataLoggerPrefix(data *tracedata.TraceData) st
 }
 
 func (this *Application) getLogLevelByHandlerName(handlerName string, req *http.Request) int {
-	_, debug := req.URL.Query()[debugUrlParamName]
-	if debug {
+	if _, debug := req.URL.Query()[debugUrlParamName]; debug {
 		return log.DEBUG
 	}
-
-	return log.ERROR
+	return this.config.LogLevel
 }
 
 func (this *Application) createContext(handlerName string, req *http.Request) context.Context {

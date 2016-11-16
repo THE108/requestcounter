@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/THE108/requestcounter/utils/log"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -19,6 +21,8 @@ const (
 type Config struct {
 	Host             string        `yaml:"host"`
 	Port             int           `yaml:"port"`
+	LogLevelString   string        `yaml:"log-level"`
+	LogLevel         int           `yaml:"-"`
 	IntervalCount    int           `yaml:"interval-count"`
 	IntervalDuration time.Duration `yaml:"interval-duration"`
 	Persistent       bool          `yaml:"persistent"`
@@ -60,6 +64,19 @@ func (cfg *Config) setDefaults() {
 
 	if cfg.Port == 0 {
 		cfg.Port = defaultListenPort
+	}
+
+	switch cfg.LogLevelString {
+	case "DEBUG", "debug":
+		cfg.LogLevel = log.DEBUG
+	case "INFO", "info":
+		cfg.LogLevel = log.INFO
+	case "WARNING", "warning":
+		cfg.LogLevel = log.WARNING
+	case "ERROR", "error":
+		cfg.LogLevel = log.ERROR
+	default:
+		cfg.LogLevel = log.INFO
 	}
 
 	if cfg.IntervalCount == 0 {

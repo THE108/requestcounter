@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/THE108/requestcounter/models/requestcount"
-	utime "github.com/THE108/requestcounter/utils/time"
 )
 
 type models struct {
@@ -10,13 +9,14 @@ type models struct {
 }
 
 func (this *Application) initModels() error {
-	var counter requestcount.IRequestCounter
-	if this.config.Persistent {
-		counter = requestcount.NewPersistentRequestCounter(this.config.IntervalCount,
-			this.config.IntervalDuration, this.config.Filename, this.config.PersistDuration, utime.NewRealTime())
-	} else {
-		counter = requestcount.NewRequestCounter(this.config.IntervalCount, this.config.IntervalDuration)
-	}
+	counter := requestcount.NewRequestCounter(&requestcount.RequestCounterConfig{
+		IntervalCount:    this.config.IntervalCount,
+		IntervalDuration: this.config.IntervalDuration,
+		Filename:         this.config.Filename,
+		Persistent:       this.config.Persistent,
+		PersistDuration:  this.config.PersistDuration,
+		Logger:           this.logger,
+	})
 
 	this.closer.AddCloser(counter)
 

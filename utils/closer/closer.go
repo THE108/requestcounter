@@ -5,8 +5,6 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-
-	"github.com/THE108/requestcounter/log"
 )
 
 type ICloser interface {
@@ -28,18 +26,13 @@ func (c *Closer) AddCloser(closer ICloser) {
 	c.mu.Unlock()
 }
 
-func (c *Closer) Run() {
+func (c *Closer) Run() (os.Signal, error) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT)
 
-	logger := log.New(os.Stderr, "ASYNC", log.INFO)
-
-	logger.Info("start waiting for signals")
-
 	sig := <-ch
 
-	logger.Info("got signal ", sig)
-	logger.ErrorIfNotNil("error on closing", c.close())
+	return sig, c.close()
 }
 
 func (c *Closer) close() error {

@@ -1,5 +1,6 @@
 host: 0.0.0.0
 port: 8080
+log-level: error
 interval-count: 100
 interval-duration: 600ms
 persistent: true
