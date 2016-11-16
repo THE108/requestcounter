@@ -9,6 +9,7 @@ import (
 	"unsafe"
 
 	"github.com/THE108/requestcounter/log"
+	utime "github.com/THE108/requestcounter/utils/time"
 
 	"github.com/edsrzf/mmap-go"
 	"golang.org/x/net/context"
@@ -28,10 +29,11 @@ type PersistentRequestCounter struct {
 	persistDuration  time.Duration
 	wg               sync.WaitGroup
 	logger           log.ILogger
+	timeManager      utime.ITime
 }
 
 func NewPersistentRequestCounter(intervalCount int, intervalDuration time.Duration, filename string,
-	persistDuration time.Duration) *PersistentRequestCounter {
+	persistDuration time.Duration, timeManager utime.ITime) *PersistentRequestCounter {
 	return &PersistentRequestCounter{
 		done:             make(chan struct{}),
 		intervalCount:    intervalCount,
@@ -39,6 +41,7 @@ func NewPersistentRequestCounter(intervalCount int, intervalDuration time.Durati
 		filename:         filename,
 		persistDuration:  persistDuration,
 		logger:           log.New(os.Stderr, "ASYNC", log.DEBUG),
+		timeManager:      timeManager,
 	}
 }
 
@@ -147,7 +150,7 @@ func (prc *PersistentRequestCounter) Get(ctx context.Context) *RequestCount {
 
 func (prc *PersistentRequestCounter) clearOutdated() {
 	prevTimestamp := time.Unix(0, int64(prc.counts[1]))
-	now := time.Now()
+	now := prc.timeManager.Now()
 	startIndex := int(prc.counts[0]) + 1
 	for i := 0; i < prc.intervalCount; i++ {
 		t := prevTimestamp.Add(prc.intervalDuration * time.Duration(i))
@@ -171,7 +174,7 @@ func (prc *PersistentRequestCounter) calculatePrevCountSum() {
 	}
 }
 
-func (prc *PersistentRequestCounter) shift() {
+func (prc *PersistentRequestCounter) shift(now time.Time) {
 	prc.mu.Lock()
 
 	// counts[0] - current index
@@ -181,7 +184,7 @@ func (prc *PersistentRequestCounter) shift() {
 	}
 
 	// set timestamp milliseconds
-	prc.counts[1] = uint64(time.Now().UnixNano())
+	prc.counts[1] = uint64(now.UnixNano())
 
 	// set current request count to 0
 	prc.counts[int(prc.counts[0])+2] = 0
@@ -193,15 +196,16 @@ func (prc *PersistentRequestCounter) shift() {
 
 func (prc *PersistentRequestCounter) runShift() {
 	defer prc.wg.Done()
+	var now time.Time
 	for {
 		select {
-		case <-time.After(prc.intervalDuration):
+		case now = <-prc.timeManager.After(prc.intervalDuration):
 		case <-prc.done:
 			prc.logger.Debug("runShift is done")
 			return
 		}
 
-		prc.shift()
+		prc.shift(now)
 	}
 }
 
@@ -213,7 +217,7 @@ func (prc *PersistentRequestCounter) runPersist() {
 	defer prc.wg.Done()
 	for {
 		select {
-		case <-time.After(prc.persistDuration):
+		case <-prc.timeManager.After(prc.persistDuration):
 		case <-prc.done:
 			prc.logger.Debug("runPersist is done")
 			return
