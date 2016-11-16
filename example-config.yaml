@@ -1,0 +1,7 @@
+host: 0.0.0.0
+port: 8080
+interval-count: 100
+interval-duration: 600ms
+persistent: true
+filename: /tmp/reqcnt.dat
+persist-duration: 5s
