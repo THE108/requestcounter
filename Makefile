@@ -1,5 +1,5 @@
 build: deps test
-	go build -o requestcount main.go
+	go build -o requestcounter main.go
 
 test:
 	go test `glide nv`

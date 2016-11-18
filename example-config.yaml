@@ -1,8 +1,23 @@
+# address to listen on
 host: 0.0.0.0
+
+# port to listen on
 port: 8080
+
+# logging lever, could be: error, warning, info, debug
 log-level: error
+
+# count of intervals (buckets)
 interval-count: 100
+
+# duration of each interval 
 interval-duration: 600ms
+
+# persist data to a file or store in memory
 persistent: true
+
+# file name where data will be persisted
 filename: /tmp/reqcnt.dat
+
+# flush data to a file time interval
 persist-duration: 5s
