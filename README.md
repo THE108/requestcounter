@@ -8,8 +8,8 @@
 Intervals are sored in a ring.
 
 First two uint64 values in data are metainfo:
-1. Current position in the ring
-2. Time of first access of interval on current position
+  * Current position in the ring
+  * Time of first access of interval on current position
 
 ## HTTP interface
 
