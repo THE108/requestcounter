@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"runtime"
-	"sync"
 	"time"
 )
 
@@ -49,12 +48,10 @@ type ILogger interface {
 // the Writer's Write method.  A Logger can be used simultaneously from
 // multiple goroutines; it guarantees to serialize access to the Writer.
 type logger struct {
-	prefix string     // prefix to write at beginning of each line
-	flag   int        // properties
-	level  int        // verbosity level
-	out    io.Writer  // destination for output
-	mu     sync.Mutex // ensures atomic writes; protects the following field
-	buf    []byte     // for accumulating text to write
+	prefix string    // prefix to write at beginning of each line
+	flag   int       // properties
+	level  int       // verbosity level
+	out    io.Writer // destination for output
 }
 
 // New creates a new Logger.
@@ -169,15 +166,17 @@ func (l *logger) output(calldepth, level int, format string, v ...interface{}) e
 		s = fmt.Sprintf(format, v...)
 	}
 
-	l.mu.Lock()
-	l.buf = l.buf[:0]
-	formatHeader(&l.buf, now, file, l.prefix, line, level, l.flag)
-	l.buf = append(l.buf, s...)
+	buf := getBytes()
+	formatHeader(&buf, now, file, l.prefix, line, level, l.flag)
+	buf = append(buf, s...)
 	if len(s) > 0 && s[len(s)-1] != '\n' {
-		l.buf = append(l.buf, '\n')
+		buf = append(buf, '\n')
 	}
-	_, err := l.out.Write(l.buf)
-	l.mu.Unlock()
+
+	_, err := l.out.Write(buf)
+
+	putBytes(buf)
+
 	return err
 }
 

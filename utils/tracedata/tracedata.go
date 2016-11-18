@@ -9,10 +9,9 @@ import (
 )
 
 const (
-	TraceIDHeader = "X-Trace-ID"
-
-	SpanIDHeader = "X-Span-ID"
-
+	// Tracing headers like in Zipkin (http://zipkin.io/)
+	TraceIDHeader      = "X-Trace-ID"
+	SpanIDHeader       = "X-Span-ID"
 	ParentSpanIDHeader = "X-Parent-Span-ID"
 )
 

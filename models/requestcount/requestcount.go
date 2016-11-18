@@ -6,7 +6,6 @@ import (
 
 	"github.com/THE108/requestcounter/utils/log"
 	"github.com/THE108/requestcounter/utils/storage"
-	utime "github.com/THE108/requestcounter/utils/time"
 
 	"golang.org/x/net/context"
 )
@@ -49,8 +48,8 @@ type RequestCounter struct {
 	done             chan struct{}
 	wg               sync.WaitGroup
 	logger           log.ILogger
-	timeManager      utime.ITime
 	storage          IStorage
+	now              func() time.Time
 }
 
 func NewRequestCounter(cfg *RequestCounterConfig) *RequestCounter {
@@ -69,8 +68,8 @@ func NewRequestCounter(cfg *RequestCounterConfig) *RequestCounter {
 		persistent:       cfg.Persistent,
 		persistDuration:  cfg.PersistDuration,
 		logger:           cfg.Logger,
-		timeManager:      utime.NewRealTime(),
 		storage:          st,
+		now:              time.Now,
 	}
 }
 
@@ -137,20 +136,20 @@ func (prc *RequestCounter) Get(ctx context.Context) *RequestCount {
 
 func (prc *RequestCounter) clearOutdated() {
 	prevTimestamp := time.Unix(0, int64(prc.counts[1]))
-	now := prc.timeManager.Now()
-	startIndex := int(prc.counts[0]) + 1
+	now := prc.now()
+	index := int(prc.counts[0]) + 3
 	for i := 0; i < prc.intervalCount; i++ {
 		t := prevTimestamp.Add(prc.intervalDuration * time.Duration(i))
 		if t.After(now) {
 			continue
 		}
 
-		index := startIndex + i
-		if index >= prc.intervalCount {
-			index = 0
-		}
+		prc.counts[index] = 0
 
-		prc.counts[index+2] = 0
+		index++
+		if index >= len(prc.counts) {
+			index = 2
+		}
 	}
 }
 
@@ -186,7 +185,7 @@ func (prc *RequestCounter) runShift() {
 	var now time.Time
 	for {
 		select {
-		case now = <-prc.timeManager.After(prc.intervalDuration):
+		case now = <-time.After(prc.intervalDuration):
 		case <-prc.done:
 			prc.logger.Debug("runShift is done")
 			return
@@ -204,7 +203,7 @@ func (prc *RequestCounter) runPersist() {
 	defer prc.wg.Done()
 	for {
 		select {
-		case <-prc.timeManager.After(prc.persistDuration):
+		case <-time.After(prc.persistDuration):
 		case <-prc.done:
 			prc.logger.Debug("runPersist is done")
 			return
